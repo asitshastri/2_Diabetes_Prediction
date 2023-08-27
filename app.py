@@ -1,26 +1,29 @@
-#import imports
-from flask import Flask, request, app, render_template, Response
-import pandas as pd
-import numpy as np
+from flask import Flask, request, app,render_template
+from flask import Response
 import pickle
+import numpy as np
+import pandas as pd
 
-application= Flask(__name__)
-app = application
 
-#loading pickle model
-scaler = pickle.load(open('Model/StandardScaler.pk1'))
-model = pickle.load(open('Model/modelForPredictingDiabetes.pk1'))
+application = Flask(__name__)
+app=application
 
-#routing to homepage
+scaler=pickle.load(open('Model/StandardScaler.pk1','rb'))
+model = pickle.load(open('Model/modelForPredictingDiabetes.pk1','rb'))
+
+## Route for homepage
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-##route for single datapoint prediction
-@app.route('prediction',methods = ['GET','POST'])
-def pred_datapoints():
-    result = ""
+## Route for Single data point prediction
+@app.route('/predictdata',methods=['GET','POST'])
+def predict_datapoint():
+    result=""
+
     if request.method=='POST':
+
         Pregnancies=int(request.form.get("Pregnancies"))
         Glucose = float(request.form.get('Glucose'))
         BloodPressure = float(request.form.get('BloodPressure'))
@@ -29,17 +32,20 @@ def pred_datapoints():
         BMI = float(request.form.get('BMI'))
         DiabetesPedigreeFunction = float(request.form.get('DiabetesPedigreeFunction'))
         Age = float(request.form.get('Age'))
-        
-        new_data = scaler.transform([[Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age]])
-        prediction = model.predict(new_data)
-        
-        if prediction[0]==1:
+
+        new_data=scaler.transform([[Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age]])
+        predict=model.predict(new_data)
+       
+        if predict[0] ==1 :
             result = 'Diabetic'
         else:
-            result = "Non-Diabetic"
+            result ='Non-Diabetic'
             
         return render_template('single_prediction.html',result=result)
+
     else:
         return render_template('home.html')
+
+
 if __name__=="__main__":
     app.run(host="0.0.0.0")
